@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">E-coding</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="camera_scan_button">Start Scan</string>
+    <string name="switch_camera_content_description">Change Camera</string>
+    <string name="camera_shutter_content_description">Camera Shutter</string>
+    <string name="gallery_content_description">Gallery Content</string>
+</resources>
