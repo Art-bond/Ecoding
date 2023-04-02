@@ -15,42 +15,48 @@ import com.d3st.e_coding.ui.camera.CameraAfterScreen
 import com.d3st.e_coding.ui.camera.CameraScreen
 
 /**
+ * Navigation Host
  *
+ * @param modifier Модификатор вида
+ * @param navController навигатор
+ * @param startDestination начальный экран
+ * @param onTakePhoto результат сделанной фото
+ * @param imageForAfterView место нахождения фото
  */
 @Composable
 fun MyAppNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
     startDestination: String = AppScreens.PHOTO.value,
-    onTakePhoto: (ImageCapture)-> Unit,
-    imageForAfterView: Uri = Uri.EMPTY
+    onTakePhoto: (ImageCapture) -> Unit,
+    imageForAfterView: Uri = Uri.EMPTY,
 ) {
 
 
     // A surface container using the 'background' color from the theme
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colors.background
-        ) {
-            NavHost(navController = navController, startDestination = startDestination) {
-                composable(AppScreens.START.value){
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colors.background
+    ) {
+        NavHost(navController = navController, startDestination = startDestination) {
+            composable(AppScreens.START.value) {
 
-                }
-                composable(AppScreens.PHOTO.value) {
-                    CameraScreen(onTakePhoto = onTakePhoto)
-                }
-                composable(AppScreens.PREVIEW_PHOTO.value) {
-                    CameraAfterScreen(
-                        imageFile = imageForAfterView,
-                        onClickNext = {}
-                    )
-                }
             }
-
+            composable(AppScreens.PHOTO.value) {
+                CameraScreen(onTakePhoto = onTakePhoto)
+            }
+            composable(AppScreens.PREVIEW_PHOTO.value) {
+                CameraAfterScreen(
+                    imageFile = imageForAfterView,
+                    onClickNext = {}
+                )
+            }
         }
+
+    }
 }
 
-enum class AppScreens(val value: String){
+enum class AppScreens(val value: String) {
     START("StartScreen"),
     PHOTO("CameraScreen"),
     PREVIEW_PHOTO("AfterCameraScreen")
