@@ -1,25 +1,23 @@
 package com.d3st.e_coding
 
 import android.Manifest
+import android.content.ContentValues
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
-import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.d3st.e_coding.presentation.theme.EcodingTheme
 import com.d3st.e_coding.ui.MyAppNavHost
-import com.d3st.e_coding.utils.getOutputDirectory
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import java.io.File
+import com.d3st.e_coding.ui.camera.CameraViewModel
+import com.d3st.e_coding.utils.MediaStoreUtils
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ExecutorService
@@ -28,31 +26,32 @@ import java.util.concurrent.Executors
 class MainActivity : ComponentActivity() {
 
     private lateinit var cameraExecutor: ExecutorService
+    private lateinit var mediaStoreUtils: MediaStoreUtils
+    private val viewModel: CameraViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         cameraExecutor = Executors.newSingleThreadExecutor()
+        mediaStoreUtils = MediaStoreUtils(applicationContext)
 
         setContent {
-            EcodingTheme() {
-                val navController = rememberNavController()
-                var uri by rememberSaveable { mutableStateOf(Uri.EMPTY) }
-
+            EcodingTheme {
                 MyAppNavHost(
-                    navController = navController,
+                    navController = rememberNavController(),
+                    viewModel = viewModel,
                     onTakePhoto = {
                         takePhoto(
-                            executor = cameraExecutor,
                             imageCapture = it,
                             onImageCaptured = { imageUri ->
-                                uri = imageUri
-                                navigateToAfterPhotoScreen(navController)
+                                viewModel.updateUri(imageUri, false)
                             },
-                            onError = { message -> Log.e("TAG", "View error:", message) },
+                            onError = { message ->
+                                Log.e(TAG, "View error:", message)
+                                viewModel.showError(message.toString())
+                            },
                         )
                     },
-                    imageForAfterView = uri
                 )
             }
         }
@@ -85,22 +84,35 @@ class MainActivity : ComponentActivity() {
 
     private fun takePhoto(
         filenameFormat: String = "yyyy-MM-dd-HH-mm-ss-SSS",
-        imageCapture: ImageCapture,
+        imageCapture: ImageCapture?,
         onImageCaptured: (Uri) -> Unit,
         onError: (ImageCaptureException) -> Unit,
-        executor: ExecutorService,
     ) {
+        imageCapture ?: return
 
-        val photoFile = File(
-            applicationContext.getOutputDirectory(),
-            SimpleDateFormat(filenameFormat, Locale.US).format(System.currentTimeMillis()) + ".jpg"
-        )
+        // Create time stamped name and MediaStore entry.
+        val name = SimpleDateFormat(filenameFormat, Locale.US)
+            .format(System.currentTimeMillis())
+        val contentValues = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, name)
+            put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
+                put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/CameraX-Image")
+            }
+        }
 
-        val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
+        // Create output options object which contains file + metadata
+        val outputOptions = ImageCapture.OutputFileOptions
+            .Builder(
+                contentResolver,
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                contentValues
+            )
+            .build()
 
         imageCapture.takePicture(
             outputOptions,
-            executor,
+            cameraExecutor,
             object : ImageCapture.OnImageSavedCallback {
                 override fun onError(exception: ImageCaptureException) {
                     Log.e(TAG, "Take photo error:", exception)
@@ -108,19 +120,12 @@ class MainActivity : ComponentActivity() {
                 }
 
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                    Log.e(TAG, "Take photo saved: $photoFile")
-                    val savedUri = Uri.fromFile(photoFile)
+                    val savedUri = outputFileResults.savedUri ?: Uri.EMPTY
+                    Log.d(TAG, "Photo capture succeeded: $savedUri")
                     onImageCaptured(savedUri)
                 }
             })
     }
-
-    private fun navigateToAfterPhotoScreen(navController: NavController) {
-        CoroutineScope(Dispatchers.Main).launch {
-            navController.navigate("AfterCameraScreen")
-        }
-    }
-
 
     companion object {
         private const val TAG = "CameraX-MLKit"
