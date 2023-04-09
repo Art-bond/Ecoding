@@ -117,6 +117,22 @@ class MainActivity : ComponentActivity() {
             })
     }
 
+    private fun recognizeText(pictureUri: Uri) {
+        val image = InputImage.fromFilePath(this, pictureUri)
+        val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+
+        recognizer.process(image)
+            .addOnSuccessListener { visionText ->
+                val resultText = visionText.text
+                viewModel.addRecognizedText(resultText)
+            }
+            .addOnFailureListener { e ->
+                Log.d(TAG, "fail recognize: $e")
+                e.message?.let { viewModel.showError(it) }
+            }
+
+    }
+
     companion object {
         private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
 
