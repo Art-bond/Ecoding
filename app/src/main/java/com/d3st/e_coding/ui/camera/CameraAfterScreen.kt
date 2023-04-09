@@ -51,7 +51,7 @@ fun SnapshotScreen(
                 modifier = Modifier.padding(bottom = 20.dp),
                 onClick = {
                     Log.i("oldRepublic", "navigate to Recognize")
-                    onClickNext
+                    onClickNext()
                 },
                 content = {
                     Icon(

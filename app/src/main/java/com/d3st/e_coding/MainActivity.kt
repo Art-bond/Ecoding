@@ -18,6 +18,9 @@ import com.d3st.e_coding.presentation.theme.EcodingTheme
 import com.d3st.e_coding.ui.MyAppNavHost
 import com.d3st.e_coding.ui.camera.CameraViewModel
 import com.d3st.e_coding.utils.MediaStoreUtils
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ExecutorService
@@ -40,18 +43,8 @@ class MainActivity : ComponentActivity() {
                 MyAppNavHost(
                     navController = rememberNavController(),
                     viewModel = viewModel,
-                    onTakePhoto = {
-                        takePhoto(
-                            imageCapture = it,
-                            onImageCaptured = { imageUri ->
-                                viewModel.updateUri(imageUri, false)
-                            },
-                            onError = { message ->
-                                Log.e(TAG, "View error:", message)
-                                viewModel.showError(message.toString())
-                            },
-                        )
-                    },
+                    onTakePhoto = ::takePhoto,
+                    onRecognizingText = ::recognizeText
                 )
             }
         }
@@ -83,15 +76,12 @@ class MainActivity : ComponentActivity() {
         }
 
     private fun takePhoto(
-        filenameFormat: String = "yyyy-MM-dd-HH-mm-ss-SSS",
         imageCapture: ImageCapture?,
-        onImageCaptured: (Uri) -> Unit,
-        onError: (ImageCaptureException) -> Unit,
     ) {
         imageCapture ?: return
 
         // Create time stamped name and MediaStore entry.
-        val name = SimpleDateFormat(filenameFormat, Locale.US)
+        val name = SimpleDateFormat(FILENAME_FORMAT, Locale.US)
             .format(System.currentTimeMillis())
         val contentValues = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, name)
@@ -116,21 +106,20 @@ class MainActivity : ComponentActivity() {
             object : ImageCapture.OnImageSavedCallback {
                 override fun onError(exception: ImageCaptureException) {
                     Log.e(TAG, "Take photo error:", exception)
-                    onError(exception)
+                    exception.message?.let { viewModel.showError(it) }
                 }
 
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                     val savedUri = outputFileResults.savedUri ?: Uri.EMPTY
                     Log.d(TAG, "Photo capture succeeded: $savedUri")
-                    onImageCaptured(savedUri)
+                    viewModel.updateUri(savedUri)
                 }
             })
     }
 
     companion object {
+        private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
+
         private const val TAG = "CameraX-MLKit"
     }
 }
-
-
-
