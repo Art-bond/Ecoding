@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -19,6 +18,7 @@ import com.d3st.e_coding.ui.camera.CameraScreen
 import com.d3st.e_coding.ui.camera.CameraViewModel
 import com.d3st.e_coding.ui.camera.SnapshotScreen
 import com.d3st.e_coding.ui.recognize.RecognizeTextScreen
+import com.d3st.e_coding.ui.start.StartScreen
 
 /**
  * Navigation Host
@@ -34,7 +34,7 @@ fun MyAppNavHost(
     viewModel: CameraViewModel,
     navController: NavHostController = rememberNavController(),
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
-    startDestination: String = AppScreens.PHOTO.value,
+    startDestination: String = AppScreens.START.value,
     onTakePhoto: (ImageCapture) -> Unit,
     onRecognizingText: (Uri) -> Unit,
 ) {
@@ -47,17 +47,22 @@ fun MyAppNavHost(
         // color = MaterialTheme.colors.background,
     ) {
         NavHost(navController = navController, startDestination = startDestination) {
+            composable(AppScreens.START.value) {
+                StartScreen(
+                    goToCamera = { navController.navigate(AppScreens.PHOTO.value) },
+                    goToCatalog = { navController.navigate(AppScreens.COMPENDIUM.value) }
+                )
+            }
             composable(AppScreens.PHOTO.value) {
                 CameraScreen(
                     onTakePhoto = onTakePhoto,
-
-                    )
+                )
             }
             composable(AppScreens.POST_VIEW_PHOTO.value) {
                 SnapshotScreen(
-                    imageFile = uiState.snapshotUri,
+                    imageFile = uiState.snapshotUri ?: Uri.EMPTY,
                     onClickNext = {
-                        onRecognizingText(uiState.snapshotUri)
+                        onRecognizingText(uiState.snapshotUri ?: Uri.EMPTY)
                     }
                 )
             }
@@ -69,15 +74,19 @@ fun MyAppNavHost(
             }
         }
     }
-    LaunchedEffect(uiState.nextScreen.value) {
-        navController.navigate(uiState.nextScreen.value)
+
+    when {
+        uiState.recognizedText != null -> navController.navigate(AppScreens.RECOGNIZED.value) {
+            popUpTo(AppScreens.POST_VIEW_PHOTO.value) { inclusive = true }
+        }
+        uiState.snapshotUri != null -> navController.navigate(AppScreens.POST_VIEW_PHOTO.value)
     }
 }
+
 enum class AppScreens(val value: String) {
     START("StartScreen"),
     PHOTO("CameraScreen"),
     POST_VIEW_PHOTO("SnapshotScreen"),
-    RECOGNIZED("RecognizeTextScreen")
+    RECOGNIZED("RecognizeTextScreen"),
+    COMPENDIUM("Compendium")
 }
-
-

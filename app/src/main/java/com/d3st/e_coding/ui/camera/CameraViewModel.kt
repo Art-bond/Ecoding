@@ -2,7 +2,6 @@ package com.d3st.e_coding.ui.camera
 
 import android.net.Uri
 import androidx.lifecycle.ViewModel
-import com.d3st.e_coding.ui.AppScreens
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -12,8 +11,7 @@ import kotlinx.coroutines.flow.update
  */
 class CameraViewModel : ViewModel() {
 
-
-    private val _uiState = MutableStateFlow(CameraUiState(nextScreen = AppScreens.PHOTO))
+    private val _uiState = MutableStateFlow(CameraUiState())
     val uiState: StateFlow<CameraUiState>
         get() = _uiState
 
@@ -23,7 +21,7 @@ class CameraViewModel : ViewModel() {
      */
     fun updateUri(imageUri: Uri) {
         _uiState.update { currentState ->
-            currentState.copy(snapshotUri = imageUri, nextScreen = AppScreens.POST_VIEW_PHOTO)
+            currentState.copy(snapshotUri = imageUri, recognizedText = null)
         }
     }
 
@@ -39,15 +37,25 @@ class CameraViewModel : ViewModel() {
         _uiState.update { currentState ->
             currentState.copy(
                 recognizedText = text,
-                nextScreen = AppScreens.RECOGNIZED
+            )
+        }
+    }
+
+    /**
+     * Reset camera snapshot and recognized text
+     */
+    fun reset(){
+        _uiState.update { currentState ->
+            currentState.copy(
+                snapshotUri = null,
+                recognizedText = null
             )
         }
     }
 }
 
 data class CameraUiState(
-    val nextScreen: AppScreens = AppScreens.START,
-    val snapshotUri: Uri = Uri.EMPTY,
+    val snapshotUri: Uri? = null,
     val errorMessage: String? = null,
     val recognizedText: String? = null
 )
