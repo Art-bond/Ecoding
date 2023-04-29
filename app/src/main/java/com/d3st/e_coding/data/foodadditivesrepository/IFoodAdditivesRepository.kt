@@ -10,5 +10,5 @@ interface IFoodAdditivesRepository {
 
     suspend fun getAdditivesAliasDictionary(): Map<String,String>
 
-    suspend fun populateDatabase()
+//    suspend fun populateDatabase()
 }
