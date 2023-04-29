@@ -8,16 +8,14 @@ import androidx.room.TypeConverters
 
 @Database(entities = [FoodAdditiveDatabaseModel::class], version = 1, exportSchema = false)
 @TypeConverters(Converters::class)
-abstract class FoodAdditivesDatabase :RoomDatabase() {
+abstract class FoodAdditivesDatabase : RoomDatabase() {
     abstract val foodAdditivesDatabaseDao: FoodAdditivesDatabaseDao
-    companion object{
+
+    companion object {
 
         @Volatile
-        private var INSTANCE:FoodAdditivesDatabase? = null
+        private var INSTANCE: FoodAdditivesDatabase? = null
 
-        /**
-         * This method creates database, will be used later
-         */
         fun getInstance(context: Context): FoodAdditivesDatabase {
             synchronized(this) {
                 var instance = INSTANCE
@@ -26,8 +24,9 @@ abstract class FoodAdditivesDatabase :RoomDatabase() {
                     instance = Room.databaseBuilder(
                         context.applicationContext,
                         FoodAdditivesDatabase::class.java,
-                        "weather_table"
+                        "food_additives_table"
                     )
+                        .createFromAsset("start.db")
                         .fallbackToDestructiveMigration()
                         .build()
                     INSTANCE = instance
@@ -35,6 +34,5 @@ abstract class FoodAdditivesDatabase :RoomDatabase() {
                 return instance
             }
         }
-
     }
 }
