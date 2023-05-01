@@ -1,5 +1,6 @@
 package com.d3st.e_coding.data.foodadditivesrepository
 
+import androidx.annotation.VisibleForTesting
 import com.d3st.e_coding.data.foodadditivesrepository.database.AdditiveType
 import com.d3st.e_coding.data.foodadditivesrepository.database.FoodAdditiveDatabaseModel
 import com.d3st.e_coding.data.foodadditivesrepository.database.FoodAdditivesDatabaseDao
@@ -12,7 +13,8 @@ class FoodAdditivesRepository(private val dao: FoodAdditivesDatabaseDao) :
     /**
      * Use this function beforehand if you want to shrink database to four most descriptive entries
      */
-    suspend fun populateDatabase() {
+    @VisibleForTesting
+    private suspend fun populateDatabase() {
         //if (dao.getCount() == 0) {
         withContext(Dispatchers.IO) {
             dao.clearAll()
@@ -117,6 +119,18 @@ class FoodAdditivesRepository(private val dao: FoodAdditivesDatabaseDao) :
             }
             dictionary.toMap()
         }
+    }
+
+    override suspend fun getAdditivesByNames(names: List<String>): List<FoodAdditiveDatabaseModel> {
+        val canonicalNamesMap = getAdditivesAliasDictionary()
+        val resultList = mutableListOf<FoodAdditiveDatabaseModel>()
+        names.forEach { name ->
+            val result = canonicalNamesMap[name.lowercase()]
+            if (result != null){
+                getAdditiveByCanonicalName(result)?.let { resultList.add(it) }
+            }
+        }
+        return resultList
     }
 
     /**

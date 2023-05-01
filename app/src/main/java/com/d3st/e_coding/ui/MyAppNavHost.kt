@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -26,7 +27,12 @@ import com.d3st.e_coding.ui.start.StartScreen
  * @param modifier Модификатор вида
  * @param navController навигатор
  * @param startDestination начальный экран
- * @param onTakePhoto результат сделанной фото
+ * @param onTakePhoto результат фотографирования
+ * @param onImageCropped результат подрезки изображения
+ * @param onFailedCropImage неудача подрезки изображения
+ * @param onRecognizingText результат распознавания текста
+ * @param snackbarHostState
+ * @param viewModel viewModel [CameraViewModel]
  */
 @Composable
 fun MyAppNavHost(
@@ -36,6 +42,8 @@ fun MyAppNavHost(
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     startDestination: String = AppScreens.START.value,
     onTakePhoto: (ImageCapture) -> Unit,
+    onImageCropped: (ImageBitmap) -> Unit,
+    onFailedCropImage:() -> Unit,
     onRecognizingText: (Uri) -> Unit,
 ) {
 
@@ -63,7 +71,9 @@ fun MyAppNavHost(
                     imageFile = uiState.snapshotUri ?: Uri.EMPTY,
                     onClickNext = {
                         onRecognizingText(uiState.snapshotUri ?: Uri.EMPTY)
-                    }
+                    },
+                    onImageCropped = onImageCropped,
+                    onFailedToLoadImage = onFailedCropImage
                 )
             }
             composable(AppScreens.RECOGNIZED.value) {
