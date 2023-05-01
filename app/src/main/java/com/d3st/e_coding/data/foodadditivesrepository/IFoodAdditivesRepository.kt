@@ -11,4 +11,11 @@ interface IFoodAdditivesRepository {
     suspend fun getAdditivesAliasDictionary(): Map<String,String>
 
 //    suspend fun populateDatabase()
+
+    /**
+     * Get List [FoodAdditiveDatabaseModel] by list of additive's name
+     *
+     * @return if additives has been found, it is added to the list [FoodAdditiveDatabaseModel]
+     */
+    suspend fun getAdditivesByNames(names: List<String>): List<FoodAdditiveDatabaseModel>
 }

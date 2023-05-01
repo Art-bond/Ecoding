@@ -10,10 +10,12 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.viewModels
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.navigation.compose.rememberNavController
+import com.d3st.e_coding.data.foodadditivesrepository.AppContainer
 import com.d3st.e_coding.presentation.theme.EcodingTheme
 import com.d3st.e_coding.ui.MyAppNavHost
 import com.d3st.e_coding.ui.camera.CameraViewModel
@@ -30,11 +32,14 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var cameraExecutor: ExecutorService
     private lateinit var mediaStoreUtils: MediaStoreUtils
-    private val viewModel: CameraViewModel by viewModels()
+    private lateinit var appContainer: AppContainer
+    private lateinit var viewModel: CameraViewModel
+    //private val viewModel: CameraViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        appContainer = (application as EcodingApplication).container
+        viewModel = CameraViewModel(appContainer)
         cameraExecutor = Executors.newSingleThreadExecutor()
         mediaStoreUtils = MediaStoreUtils(applicationContext)
 
@@ -44,7 +49,9 @@ class MainActivity : ComponentActivity() {
                     navController = rememberNavController(),
                     viewModel = viewModel,
                     onTakePhoto = ::takePhoto,
-                    onRecognizingText = ::recognizeText
+                    onImageCropped = ::recognizeBitmapText,
+                    onFailedCropImage = ::cropError,
+                    onRecognizingText = ::recognizeTextByUri
                 )
             }
         }
@@ -117,20 +124,48 @@ class MainActivity : ComponentActivity() {
             })
     }
 
-    private fun recognizeText(pictureUri: Uri) {
-        val image = InputImage.fromFilePath(this, pictureUri)
-        val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+    private fun recognizeBitmapText(imageBitmap: ImageBitmap) {
+        val image = InputImage.fromBitmap(imageBitmap.asAndroidBitmap(), 0)
+        recognizeText(image)
+    }
 
+    private fun recognizeTextByUri(pictureUri: Uri) {
+        val image = InputImage.fromFilePath(this, pictureUri)
+        recognizeText(image)
+    }
+
+    private fun recognizeText(image: InputImage) {
+        val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
         recognizer.process(image)
-            .addOnSuccessListener { visionText ->
-                val resultText = visionText.text
-                viewModel.addRecognizedText(resultText)
+            .addOnSuccessListener { result ->
+                val resultWordList = mutableListOf<String>()
+                val resultText = result.text
+                for (block in result.textBlocks) {
+                    val blockText = block.text
+                    val blockCornerPoints = block.cornerPoints
+                    val blockFrame = block.boundingBox
+                    for (line in block.lines) {
+                        val lineText = line.text
+                        val lineCornerPoints = line.cornerPoints
+                        val lineFrame = line.boundingBox
+                        for (element in line.elements) {
+                            val elementText = element.text
+                            resultWordList.add(elementText)
+                            val elementCornerPoints = element.cornerPoints
+                            val elementFrame = element.boundingBox
+                        }
+                    }
+                }
+                viewModel.addRecognizedText(resultText, resultWordList)
             }
             .addOnFailureListener { e ->
                 Log.d(TAG, "fail recognize: $e")
                 e.message?.let { viewModel.showError(it) }
             }
+    }
 
+    private fun cropError() {
+        viewModel.showError("crop is failed")
     }
 
     companion object {
