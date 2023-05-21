@@ -4,6 +4,8 @@ import androidx.annotation.VisibleForTesting
 import com.d3st.e_coding.data.foodadditivesrepository.database.AdditiveType
 import com.d3st.e_coding.data.foodadditivesrepository.database.FoodAdditiveDatabaseModel
 import com.d3st.e_coding.data.foodadditivesrepository.database.FoodAdditivesDatabaseDao
+import com.d3st.e_coding.data.foodadditivesrepository.database.asDetailsFoodAdditiveDomainModel
+import com.d3st.e_coding.ui.details.DetailsFoodAdditiveDomainModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -149,5 +151,16 @@ class FoodAdditivesRepository(private val dao: FoodAdditivesDatabaseDao) :
         withContext(Dispatchers.IO) {
             return@withContext dao.getCount()
         }
+
+    /**
+     * Get all additives from database
+     *
+     * @return list of all additives converted to [DetailsFoodAdditiveDomainModel]
+     */
+    override suspend fun getAll(): List<DetailsFoodAdditiveDomainModel> {
+        return withContext(Dispatchers.IO) {
+            return@withContext dao.getAll().map { it.asDetailsFoodAdditiveDomainModel() }
+        }
+    }
 
 }

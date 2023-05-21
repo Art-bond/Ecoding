@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
 /**
- * Screen show list with all additions
+ * Screen show list with all additives
  */
 @Composable
 fun CatalogScreen(

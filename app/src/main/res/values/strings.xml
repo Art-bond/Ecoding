@@ -7,4 +7,5 @@
     <string name="gallery_content_description">Gallery Content</string>
     <string name="check_compound">Проверить состав</string>
     <string name="find_item">Найти элемент</string>
+    <string name="danger">Опасность</string>
 </resources>
