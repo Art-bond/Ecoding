@@ -52,7 +52,7 @@ class EcodingPhotoHandler(
 
         imageCapture?.takePicture(
             outputOptions,
-            Executors.newSingleThreadExecutor(),
+            executor,
             callback
         )
     }
