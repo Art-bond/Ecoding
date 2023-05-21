@@ -16,7 +16,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.d3st.e_coding.ui.camera.CameraScreen
-import com.d3st.e_coding.ui.camera.CameraViewModel
+import com.d3st.e_coding.ui.camera.RecognizeViewModel
 import com.d3st.e_coding.ui.camera.SnapshotScreen
 import com.d3st.e_coding.ui.recognize.RecognizeTextScreen
 import com.d3st.e_coding.ui.start.StartScreen
@@ -32,12 +32,12 @@ import com.d3st.e_coding.ui.start.StartScreen
  * @param onFailedCropImage неудача подрезки изображения
  * @param onRecognizingText результат распознавания текста
  * @param snackbarHostState
- * @param viewModel viewModel [CameraViewModel]
+ * @param viewModel viewModel [RecognizeViewModel]
  */
 @Composable
-fun MyAppNavHost(
+fun RecognizeNavHost(
     modifier: Modifier = Modifier,
-    viewModel: CameraViewModel,
+    viewModel: RecognizeViewModel,
     navController: NavHostController = rememberNavController(),
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     startDestination: String = AppScreens.START.value,
@@ -48,6 +48,13 @@ fun MyAppNavHost(
 ) {
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+/*    val backHandlingEnabled by remember { mutableStateOf(true) }
+    BackHandler(backHandlingEnabled) {
+        // Handle back press
+        //viewModel.reset()
+        navController.popBackStack()
+    }*/
 
     // A surface container using the 'background' color from the theme
     Surface(
@@ -78,8 +85,8 @@ fun MyAppNavHost(
             }
             composable(AppScreens.RECOGNIZED.value) {
                 RecognizeTextScreen(
-                    modifier = modifier,
-                    recognizingText = uiState.recognizedText.orEmpty()
+                    recognizingText = uiState.recognizedText.orEmpty(),
+                    sourceEcodeText = uiState.sourceTextForRecognize.orEmpty()
                 )
             }
         }

@@ -24,7 +24,7 @@
             android:name="com.google.firebase.ml.vision.DEPENDENCIES"
             android:value="ocr" />
         <activity
-            android:name=".MainActivity"
+            android:name=".EcodingActivity"
             android:exported="true">
 
             <!-- Register as a system camera app -->

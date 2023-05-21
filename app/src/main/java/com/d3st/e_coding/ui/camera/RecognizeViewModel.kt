@@ -3,17 +3,20 @@ package com.d3st.e_coding.ui.camera
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.d3st.e_coding.data.foodadditivesrepository.AppContainer
+import com.d3st.e_coding.data.foodadditivesrepository.IFoodAdditivesRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
- * ViewModel for CameraScreen
+ * ViewModel for proccess recognize text
  */
-class CameraViewModel(
-    private val appContainer: AppContainer
+@HiltViewModel
+class RecognizeViewModel @Inject constructor(
+    private val foodAdditivesRepository: IFoodAdditivesRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CameraUiState())
@@ -43,10 +46,11 @@ class CameraViewModel(
      */
     fun addRecognizedText(text: String, words: List<String>){
         viewModelScope.launch {
-            val additives = appContainer.foodAdditivesRepository.getAdditivesByNames(words)
+            val additives = foodAdditivesRepository.getAdditivesByNames(words)
             _uiState.update { currentState ->
                 currentState.copy(
                     recognizedText = additives.map { it.name }.toString(),
+                    sourceTextForRecognize = words.toString()
                 )
             }
         }
@@ -69,5 +73,6 @@ class CameraViewModel(
 data class CameraUiState(
     val snapshotUri: Uri? = null,
     val errorMessage: String? = null,
-    val recognizedText: String? = null
+    val recognizedText: String? = null,
+    val sourceTextForRecognize: String? = null,
 )
