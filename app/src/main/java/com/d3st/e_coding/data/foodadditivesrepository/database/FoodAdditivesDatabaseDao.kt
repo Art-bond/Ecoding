@@ -31,4 +31,5 @@ interface FoodAdditivesDatabaseDao {
 
     @Query("SELECT COUNT(*) FROM food_additives_table")
     fun getCount(): Int
+
 }

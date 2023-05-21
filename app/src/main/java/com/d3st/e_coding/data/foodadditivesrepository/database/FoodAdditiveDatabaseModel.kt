@@ -3,6 +3,7 @@ package com.d3st.e_coding.data.foodadditivesrepository.database
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.d3st.e_coding.ui.details.DetailsFoodAdditiveDomainModel
 
 
 @Entity(tableName = "food_additives_table")
@@ -82,9 +83,26 @@ enum class AdditiveType(val value:Int){
     THICKENER(27);
 
 
-
     companion object {
         private val map = AdditiveType.values().associateBy { it.value }
         infix fun from(value: Int) = map[value]
     }
+}
+
+fun FoodAdditiveDatabaseModel.asDetailsFoodAdditiveDomainModel(): DetailsFoodAdditiveDomainModel {
+    return DetailsFoodAdditiveDomainModel(
+        canonicalName = canonicalName,
+        name = name,
+        alias = alias,
+        harmfulness = harmfulness,
+        isBelongToGroup = isBelongToGroup,
+        groupParentCanonicalName = groupParentCanonicalName,
+        isAllowedRU = isAllowedRU,
+        isAllowedUS = isAllowedUS,
+        isAllowedEU = isAllowedEU,
+        functionalClass = functionalClass,
+        origin = origin,
+        description = description,
+        violatedSystems = violatedSystems,
+    )
 }

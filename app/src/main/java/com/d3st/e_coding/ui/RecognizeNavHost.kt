@@ -105,5 +105,6 @@ enum class AppScreens(val value: String) {
     PHOTO("CameraScreen"),
     POST_VIEW_PHOTO("SnapshotScreen"),
     RECOGNIZED("RecognizeTextScreen"),
-    COMPENDIUM("Compendium")
+    COMPENDIUM("Compendium"),
+    DETAILS("Details")
 }
