@@ -4,8 +4,11 @@ import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.camera.core.ImageCapture
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Button
+import androidx.compose.material.Icon
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.Camera
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,6 +21,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.d3st.e_coding.R
 import com.d3st.e_coding.ui.CompendiumNavHost
 import com.d3st.e_coding.ui.RecognizeNavHost
+import com.d3st.e_coding.ui.components.PressIconButton
+
 
 @Composable
 fun StartScreen(
@@ -26,20 +31,22 @@ fun StartScreen(
     onImageCropped: (ImageBitmap) -> Unit,
     onFailedCropImage: () -> Unit,
     onRecognizingText: (Uri) -> Unit,
+    onExitPressed: () -> Unit,
 ) {
     val uiState = viewModel.uiState.collectAsState()
-
     val backHandlingEnabled by remember { mutableStateOf(true) }
     BackHandler(backHandlingEnabled) {
-        viewModel.update(StartNavigationState.Start)
+        if (uiState.value == StartNavigationState.Start){
+            onExitPressed()
+        } else {
+            viewModel.update(StartNavigationState.Start)
+        }
     }
-
     when (uiState.value) {
         StartNavigationState.Start -> {
             StartScreenButtons(
                 goToCatalog = { viewModel.update(StartNavigationState.Compendium) },
                 goToCamera = { viewModel.update(StartNavigationState.Recognize) },
-
             )
         }
         StartNavigationState.Recognize -> {
@@ -75,25 +82,27 @@ fun StartScreenButtons(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Button(
-                modifier = modifier.padding(bottom = 20.dp),
-                onClick = goToCamera
-            ) {
-                Text(
-                    text = stringResource(R.string.check_compound),
-                    fontSize = TextUnit(20F, TextUnitType.Sp)
-                )
-            }
-            Button(
-                onClick = goToCatalog
-            ) {
-                Text(
-                    text = stringResource(R.string.find_item),
-                    fontSize = TextUnit(20F, TextUnitType.Sp)
-
-                )
-
-            }
+            PressIconButton(
+                onClick = goToCamera,
+                icon = { Icon(Icons.Filled.Camera, contentDescription = null) },
+                text = {
+                    Text(
+                        text = stringResource(R.string.check_compound),
+                        fontSize = TextUnit(20F, TextUnitType.Sp)
+                    )
+                },
+                Modifier.padding(bottom = 8.dp)
+            )
+            PressIconButton(
+                onClick = goToCatalog,
+                icon = { Icon(Icons.Filled.Book, contentDescription = null) },
+                text = {
+                    Text(
+                        text = stringResource(R.string.find_item),
+                        fontSize = TextUnit(20F, TextUnitType.Sp)
+                    )
+                }
+            )
         }
     }
 }
