@@ -31,9 +31,17 @@ fun StartScreen(
     onImageCropped: (ImageBitmap) -> Unit,
     onFailedCropImage: () -> Unit,
     onRecognizingText: (Uri) -> Unit,
+    onExitPressed: () -> Unit,
 ) {
     val uiState = viewModel.uiState.collectAsState()
-
+    val backHandlingEnabled by remember { mutableStateOf(true) }
+    BackHandler(backHandlingEnabled) {
+        if (uiState.value == StartNavigationState.Start){
+            onExitPressed()
+        } else {
+            viewModel.update(StartNavigationState.Start)
+        }
+    }
     when (uiState.value) {
         StartNavigationState.Start -> {
             StartScreenButtons(
@@ -42,10 +50,6 @@ fun StartScreen(
             )
         }
         StartNavigationState.Recognize -> {
-            val backHandlingEnabled by remember { mutableStateOf(true) }
-            BackHandler(backHandlingEnabled) {
-                viewModel.update(StartNavigationState.Start)
-            }
             RecognizeNavHost(
                 viewModel = viewModel(),
                 onTakePhoto = onTakePhoto,
@@ -55,10 +59,6 @@ fun StartScreen(
             )
         }
         StartNavigationState.Compendium -> {
-            val backHandlingEnabled by remember { mutableStateOf(true) }
-            BackHandler(backHandlingEnabled) {
-                viewModel.update(StartNavigationState.Start)
-            }
             CompendiumNavHost()
         }
     }

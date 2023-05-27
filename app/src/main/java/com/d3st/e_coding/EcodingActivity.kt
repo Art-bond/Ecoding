@@ -57,7 +57,8 @@ class EcodingActivity : ComponentActivity(),
                     onTakePhoto = photoHandler::handlePhotoResult,
                     onImageCropped = ::recognizeBitmapText,
                     onFailedCropImage = ::cropError,
-                    onRecognizingText = ::recognizeTextByUri
+                    onRecognizingText = ::recognizeTextByUri,
+                    onExitPressed = ::finish
                 )
             }
         }
