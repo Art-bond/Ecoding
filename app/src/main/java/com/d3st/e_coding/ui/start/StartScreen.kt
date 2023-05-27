@@ -50,6 +50,10 @@ fun StartScreen(
             )
         }
         StartNavigationState.Recognize -> {
+            val backHandlingEnabled by remember { mutableStateOf(true) }
+            BackHandler(backHandlingEnabled) {
+                viewModel.update(StartNavigationState.Start)
+            }
             RecognizeNavHost(
                 viewModel = viewModel(),
                 onTakePhoto = onTakePhoto,
@@ -59,6 +63,10 @@ fun StartScreen(
             )
         }
         StartNavigationState.Compendium -> {
+            val backHandlingEnabled by remember { mutableStateOf(true) }
+            BackHandler(backHandlingEnabled) {
+                viewModel.update(StartNavigationState.Start)
+            }
             CompendiumNavHost()
         }
     }
