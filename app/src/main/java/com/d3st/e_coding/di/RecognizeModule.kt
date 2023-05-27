@@ -17,16 +17,15 @@ object RecognizeModule {
 
     @Provides
     fun provideFoodAdditivesRepository(
-        dao: FoodAdditivesDatabaseDao
+        dao: FoodAdditivesDatabaseDao,
     ): IFoodAdditivesRepository {
         return FoodAdditivesRepository(dao)
     }
 
     @Provides
     fun provideFoodAdditivesDataBase(
-        @ApplicationContext appContext: Context
-    ): FoodAdditivesDatabaseDao{
+        @ApplicationContext appContext: Context,
+    ): FoodAdditivesDatabaseDao {
         return FoodAdditivesDatabase.getInstance(appContext).foodAdditivesDatabaseDao
     }
-
 }

@@ -5,31 +5,23 @@ import android.content.Context
 import android.os.Build
 import android.provider.MediaStore
 import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCapture.ERROR_UNKNOWN
-import androidx.camera.core.ImageCaptureException
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 /**
  * Helper for handling photo form camera
  */
 class EcodingPhotoHandler(
-    val context: Context,
+    private val context: Context,
     private val callback: ImageCapture.OnImageSavedCallback,
+    private val executor: ExecutorService? = Executors.newSingleThreadExecutor(),
 ) {
-    private val executor = Executors.newSingleThreadExecutor()
-
     fun handlePhotoResult(
         imageCapture: ImageCapture?,
     ) {
-        imageCapture ?: callback.onError(
-            ImageCaptureException(
-                ERROR_UNKNOWN,
-                "imageCapture is null",
-                null
-            )
-        )
+        imageCapture ?: return
 
         // Create time stamped name and MediaStore entry.
         val name = SimpleDateFormat(FILENAME_FORMAT, Locale.US)
@@ -47,18 +39,17 @@ class EcodingPhotoHandler(
             context.contentResolver,
             MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
             contentValues
-        )
-            .build()
+        ).build()
 
-        imageCapture?.takePicture(
+        imageCapture.takePicture(
             outputOptions,
-            executor,
+            checkNotNull(executor),
             callback
         )
     }
 
     fun clear() {
-        executor.shutdown()
+        executor?.shutdown()
     }
 
     companion object {

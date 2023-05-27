@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId "com.d3st.e_coding"
-        minSdk 21
+        minSdk 24
         targetSdk 33
         versionCode 1
         versionName "1.0"
@@ -85,6 +85,7 @@ dependencies {
     implementation platform('com.google.firebase:firebase-bom:31.4.0')
 
     // CameraX
+    implementation "androidx.camera:camera-camera2:$cameraxVersion"
     implementation "androidx.camera:camera-lifecycle:$cameraxVersion"
     implementation "androidx.camera:camera-video:$cameraxVersion"
     implementation "androidx.camera:camera-view:$cameraxVersion"
@@ -92,6 +93,7 @@ dependencies {
 
     //Coroutines
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4"
+    implementation "androidx.concurrent:concurrent-futures-ktx:1.1.0"
 
     // Coil
     implementation "io.coil-kt:coil-compose:2.3.0"

@@ -13,10 +13,9 @@ import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
-import androidx.navigation.compose.rememberNavController
 import com.d3st.e_coding.presentation.theme.EcodingTheme
-import com.d3st.e_coding.ui.RecognizeNavHost
 import com.d3st.e_coding.ui.camera.RecognizeViewModel
+import com.d3st.e_coding.ui.start.StartScreen
 import com.d3st.e_coding.utils.EcodingFireBaseAnalyzer
 import com.d3st.e_coding.utils.EcodingPhotoHandler
 import com.d3st.e_coding.utils.TextRecognizeResultCallback
@@ -33,19 +32,17 @@ class EcodingActivity : ComponentActivity(),
     private lateinit var photoHandler: EcodingPhotoHandler
     private lateinit var textAnalyzer: EcodingFireBaseAnalyzer
 
-    private val viewModel: RecognizeViewModel by viewModels()
+    private val sharedViewModel: RecognizeViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        photoHandler = EcodingPhotoHandler(this, this)
+        photoHandler = EcodingPhotoHandler(this.baseContext, this)
         textAnalyzer = EcodingFireBaseAnalyzer(this, this)
 
         setContent {
             EcodingTheme {
-                RecognizeNavHost(
-                    navController = rememberNavController(),
-                    viewModel = viewModel,
+                StartScreen(
                     onTakePhoto = photoHandler::handlePhotoResult,
                     onImageCropped = ::recognizeBitmapText,
                     onFailedCropImage = ::cropError,
@@ -91,19 +88,18 @@ class EcodingActivity : ComponentActivity(),
         textAnalyzer.recognizeText(image)
     }
 
-
-
     private fun cropError() {
-        viewModel.showError("crop is failed")
+        sharedViewModel.showError("crop is failed")
     }
 
     override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
         val savedUri = outputFileResults.savedUri ?: Uri.EMPTY
-        viewModel.updateUri(savedUri)
+        sharedViewModel.updateUri(savedUri)
     }
 
     override fun onError(exception: ImageCaptureException) {
-        exception.message?.let { viewModel.showError(it) }
+        Log.e(TAG, "exception: $exception")
+        exception.message?.let { sharedViewModel.showError(it) }
     }
 
     override fun onSuccessTextRecognize(text: FirebaseVisionText) {
@@ -132,12 +128,12 @@ class EcodingActivity : ComponentActivity(),
                 }
             }
         }
-        viewModel.addRecognizedText(resultText, resultWordList)
+        sharedViewModel.addRecognizedText(resultText, resultWordList)
     }
 
     override fun onFailureTextRecognize(e: Exception) {
         Log.e(TAG, "fail text recognize: $e")
-        e.message?.let { viewModel.showError(it) }
+        e.message?.let { sharedViewModel.showError(it) }
     }
 
     companion object {

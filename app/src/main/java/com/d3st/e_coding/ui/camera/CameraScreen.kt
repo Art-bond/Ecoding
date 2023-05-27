@@ -27,13 +27,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.content.ContextCompat
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
+import androidx.concurrent.futures.await
+import androidx.lifecycle.LifecycleOwner
 
 
 /**
- *
+ * Camera Screen
  */
 @Composable
 fun CameraScreen(
@@ -51,11 +50,11 @@ fun CameraScreen(
 @Composable
 fun CameraView(
     onTakePhoto: (ImageCapture) -> Unit,
+    lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
+    context: Context = LocalContext.current
 ) {
     // 1
     val lensFacing = CameraSelector.LENS_FACING_BACK
-    val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
 
     val preview = Preview.Builder().build()
     val previewView = remember { PreviewView(context) }
@@ -64,11 +63,19 @@ fun CameraView(
         .requireLensFacing(lensFacing)
         .build()
 
+    var cameraProvider: ProcessCameraProvider?
+
     // 2
     LaunchedEffect(lensFacing) {
-        val cameraProvider = context.getCameraProvider()
-        cameraProvider.unbindAll()
-        cameraProvider.bindToLifecycle(
+
+        cameraProvider = ProcessCameraProvider.getInstance(context).await()
+
+        // CameraProvider
+        cameraProvider = cameraProvider
+            ?: throw IllegalStateException("Camera initialization failed.")
+
+        cameraProvider?.unbindAll()
+        cameraProvider?.bindToLifecycle(
             lifecycleOwner,
             cameraSelector,
             preview,
@@ -113,13 +120,3 @@ fun CameraView(
 fun CameraViewPreview() {
     CameraView({})
 }
-
-
-private suspend fun Context.getCameraProvider(): ProcessCameraProvider =
-    suspendCoroutine { continuation ->
-        ProcessCameraProvider.getInstance(this).also { cameraProvider ->
-            cameraProvider.addListener({
-                continuation.resume(cameraProvider.get())
-            }, ContextCompat.getMainExecutor(this))
-        }
-    }

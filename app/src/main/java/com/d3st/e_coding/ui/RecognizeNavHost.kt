@@ -16,10 +16,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.d3st.e_coding.ui.camera.CameraScreen
+import com.d3st.e_coding.ui.camera.CameraUiState
 import com.d3st.e_coding.ui.camera.RecognizeViewModel
 import com.d3st.e_coding.ui.camera.SnapshotScreen
 import com.d3st.e_coding.ui.recognize.RecognizeTextScreen
-import com.d3st.e_coding.ui.start.StartScreen
 
 /**
  * Navigation Host
@@ -40,21 +40,14 @@ fun RecognizeNavHost(
     viewModel: RecognizeViewModel,
     navController: NavHostController = rememberNavController(),
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
-    startDestination: String = AppScreens.START.value,
+    startDestination: String = AppScreens.PHOTO.value,
     onTakePhoto: (ImageCapture) -> Unit,
     onImageCropped: (ImageBitmap) -> Unit,
-    onFailedCropImage:() -> Unit,
+    onFailedCropImage: () -> Unit,
     onRecognizingText: (Uri) -> Unit,
 ) {
 
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-/*    val backHandlingEnabled by remember { mutableStateOf(true) }
-    BackHandler(backHandlingEnabled) {
-        // Handle back press
-        //viewModel.reset()
-        navController.popBackStack()
-    }*/
+    val uiState: CameraUiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     // A surface container using the 'background' color from the theme
     Surface(
@@ -62,12 +55,6 @@ fun RecognizeNavHost(
         // color = MaterialTheme.colors.background,
     ) {
         NavHost(navController = navController, startDestination = startDestination) {
-            composable(AppScreens.START.value) {
-                StartScreen(
-                    goToCamera = { navController.navigate(AppScreens.PHOTO.value) },
-                    goToCatalog = { navController.navigate(AppScreens.COMPENDIUM.value) }
-                )
-            }
             composable(AppScreens.PHOTO.value) {
                 CameraScreen(
                     onTakePhoto = onTakePhoto,
@@ -101,7 +88,6 @@ fun RecognizeNavHost(
 }
 
 enum class AppScreens(val value: String) {
-    START("StartScreen"),
     PHOTO("CameraScreen"),
     POST_VIEW_PHOTO("SnapshotScreen"),
     RECOGNIZED("RecognizeTextScreen"),
