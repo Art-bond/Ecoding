@@ -51,7 +51,7 @@ fun CameraScreen(
 fun CameraView(
     onTakePhoto: (ImageCapture) -> Unit,
     lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
-    context: Context = LocalContext.current
+    context: Context = LocalContext.current,
 ) {
     // 1
     val lensFacing = CameraSelector.LENS_FACING_BACK
@@ -63,19 +63,18 @@ fun CameraView(
         .requireLensFacing(lensFacing)
         .build()
 
-    var cameraProvider: ProcessCameraProvider?
+    val cameraProviderFeature = ProcessCameraProvider.getInstance(context)
 
     // 2
     LaunchedEffect(lensFacing) {
-
-        cameraProvider = ProcessCameraProvider.getInstance(context).await()
+        var cameraProvider = cameraProviderFeature.await()
 
         // CameraProvider
         cameraProvider = cameraProvider
             ?: throw IllegalStateException("Camera initialization failed.")
 
-        cameraProvider?.unbindAll()
-        cameraProvider?.bindToLifecycle(
+        cameraProvider.unbindAll()
+        cameraProvider.bindToLifecycle(
             lifecycleOwner,
             cameraSelector,
             preview,

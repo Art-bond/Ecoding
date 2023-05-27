@@ -1,7 +1,9 @@
 package com.d3st.e_coding
 
 import android.Manifest
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -13,6 +15,7 @@ import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.core.content.ContextCompat
 import com.d3st.e_coding.presentation.theme.EcodingTheme
 import com.d3st.e_coding.ui.camera.RecognizeViewModel
 import com.d3st.e_coding.ui.start.StartScreen
@@ -34,6 +37,14 @@ class EcodingActivity : ComponentActivity(),
 
     private val sharedViewModel: RecognizeViewModel by viewModels()
 
+    override fun onStart() {
+        super.onStart()
+        // Request camera permissions
+        if (!hasPermissions()) {
+            requestPermissions()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -51,7 +62,6 @@ class EcodingActivity : ComponentActivity(),
             }
         }
 
-        requestPermissionLauncher.launch(Manifest.permission.CAMERA)
     }
 
     override fun onDestroy() {
@@ -59,24 +69,31 @@ class EcodingActivity : ComponentActivity(),
         photoHandler.clear()
     }
 
+    private fun requestPermissions() {
+        activityResultLauncher.launch(PERMISSIONS_REQUIRED)
+    }
 
-    private val requestPermissionLauncher =
+    private val activityResultLauncher =
         registerForActivityResult(
-            ActivityResultContracts.RequestPermission()
-        ) { isGranted: Boolean ->
-            if (isGranted) {
-                // Permission is granted. Continue the action or workflow in your
-                // app.
-            } else {
-                // Explain to the user that the feature is unavailable because the
-                // feature requires a permission that the user has denied. At the
-                // same time, respect the user's decision. Don't link to system
-                // settings in an effort to convince the user to change their
-                // decision.
+            ActivityResultContracts.RequestMultiplePermissions())
+        { permissions ->
+            // Handle Permission granted/rejected
+            var permissionGranted = true
+            permissions.entries.forEach {
+                if (it.key in PERMISSIONS_REQUIRED && !it.value)
+                    permissionGranted = false
+                Log.d(TAG,"permissions ${it.key} - ${it.value}" )
+            }
+            if (!permissionGranted) {
+                Log.d(TAG,"Permission request denied" )
                 finish()
             }
         }
 
+    /** Convenience method used to check if all permissions required by this app are granted */
+    private fun hasPermissions() = PERMISSIONS_REQUIRED.all {
+        ContextCompat.checkSelfPermission(baseContext, it) == PackageManager.PERMISSION_GRANTED
+    }
 
     private fun recognizeBitmapText(imageBitmap: ImageBitmap) {
         val image = FirebaseVisionImage.fromBitmap(imageBitmap.asAndroidBitmap())
@@ -98,7 +115,7 @@ class EcodingActivity : ComponentActivity(),
     }
 
     override fun onError(exception: ImageCaptureException) {
-        Log.e(TAG, "exception: $exception")
+        Log.e(TAG, "Photo capture failed: ${exception.message}", exception)
         exception.message?.let { sharedViewModel.showError(it) }
     }
 
@@ -138,5 +155,14 @@ class EcodingActivity : ComponentActivity(),
 
     companion object {
         private const val TAG = "EcodingActivity"
+
+        private val PERMISSIONS_REQUIRED =
+            mutableListOf (
+                Manifest.permission.CAMERA,
+            ).apply {
+                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+                    add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                }
+            }.toTypedArray()
     }
 }
