@@ -19,6 +19,7 @@ import com.d3st.e_coding.ui.camera.CameraScreen
 import com.d3st.e_coding.ui.camera.CameraUiState
 import com.d3st.e_coding.ui.camera.RecognizeViewModel
 import com.d3st.e_coding.ui.camera.SnapshotScreen
+import com.d3st.e_coding.ui.details.DetailsScreen
 import com.d3st.e_coding.ui.recognize.RecognizeTextScreen
 
 /**
@@ -73,8 +74,17 @@ fun RecognizeNavHost(
             composable(AppScreens.RECOGNIZED.value) {
                 RecognizeTextScreen(
                     recognizingText = uiState.recognizedText.orEmpty(),
-                    sourceEcodeText = uiState.sourceTextForRecognize.orEmpty()
+                    sourceEcodeText = uiState.sourceTextForRecognize.orEmpty(),
+                    recognizedAdditives = uiState.recognizedAdditives.orEmpty(),
+                    onAdditiveClick = { input -> navController.navigate("${AppScreens.DETAILS.value}/$input") },
                 )
+            }
+            composable("${AppScreens.DETAILS.value}/{name}") { args ->
+                args.arguments?.getString("name")?.let {
+                    DetailsScreen(
+                        additive = uiState.recognizedAdditives?.first { x -> x.canonicalName == it }!!
+                    )
+                }
             }
         }
     }
