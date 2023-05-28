@@ -4,6 +4,8 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.d3st.e_coding.data.foodadditivesrepository.IFoodAdditivesRepository
+import com.d3st.e_coding.data.foodadditivesrepository.database.asDetailsFoodAdditiveDomainModel
+import com.d3st.e_coding.ui.details.DetailsFoodAdditiveDomainModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -50,7 +52,9 @@ class RecognizeViewModel @Inject constructor(
             _uiState.update { currentState ->
                 currentState.copy(
                     recognizedText = additives.map { it.name }.toString(),
-                    sourceTextForRecognize = words.toString()
+                    sourceTextForRecognize = words.toString(),
+                    recognizedAdditives = additives.map { it.asDetailsFoodAdditiveDomainModel() }
+                        .sortedBy { it.harmfulness }.reversed()
                 )
             }
         }
@@ -75,4 +79,5 @@ data class CameraUiState(
     val errorMessage: String? = null,
     val recognizedText: String? = null,
     val sourceTextForRecognize: String? = null,
+    val recognizedAdditives: List<DetailsFoodAdditiveDomainModel>? = null,
 )
